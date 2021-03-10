@@ -1,24 +1,44 @@
-import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import {Alert} from "react-native";
+import Loading from "./loading";
+import * as Location from "expo-location";
+import axios from "axios";
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Hello!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+const API_KEY = "7938719976d75f63796340b245b10d61";
+
+export default class extends React.Component {
+	state = {
+		isLoading : true
+	};
+	
+	getWeather = async(latitude, longitude) => {
+		const {data} = await axios.get(
+			`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}`
+
+		);
+		console.log(data);
+	}
+
+	getLocation = async() => {
+		try{
+			await Location.requestPermissionsAsync();
+			const { coords : {latitude, longitude} } = await Location.getCurrentPositionAsync();
+			this.getWeather(latitude, longitude)
+			this.setState({isLoading : false});
+		} catch(error){
+			Alert.alert("Can't find you.", "So sad");
+		}
+		//Permission을 받지 못할경우 catch로 이동해서 실행
+		//async await는 비동기 실행을 위한 명령어
+		
+	}
+	componentDidMount(){
+		this.getLocation();
+	}
+	render(){
+		const { isLoading } = this.state;
+		return isLoading ? <Loading></Loading> : null
+	}
+  
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fefefe',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-	text:{
-		color: 'red'
-	}
-});
